@@ -1,0 +1,15 @@
+{
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "totes.jcjunk.space" }],
+      "destination": "/totes.html"
+    },
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "flooring.jcjunk.space" }],
+      "destination": "/flooring.html"
+    }
+  ]
+}
