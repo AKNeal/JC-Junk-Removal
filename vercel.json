@@ -1,15 +1,8 @@
 {
-  "cleanUrls": true,
-  "rewrites": [
-    {
-      "source": "/",
-      "has": [{ "type": "host", "value": "totes.jcjunk.space" }],
-      "destination": "/totes.html"
-    },
-    {
-      "source": "/",
-      "has": [{ "type": "host", "value": "flooring.jcjunk.space" }],
-      "destination": "/flooring.html"
-    }
+  "routes": [
+    { "src": "/", "has": [{ "type": "host", "value": "totes.jcjunk.space" }], "dest": "/totes.html" },
+    { "src": "/", "has": [{ "type": "host", "value": "flooring.jcjunk.space" }], "dest": "/flooring.html" },
+    { "src": "/totes", "dest": "/totes.html" },
+    { "src": "/flooring", "dest": "/flooring.html" }
   ]
 }
