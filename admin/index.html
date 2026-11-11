@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>JC's Junk Removal — Team</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/admin/admin.css">
+</head>
+<body>
+<header class="top">
+  <div class="badge">Est. 2026</div>
+  <div class="wordmark">JC'S <span>Junk</span> Removal</div>
+  <div class="sub">Team Area</div>
+  <div class="divider"></div>
+</header>
+<main>
+  <div id="v-loading" class="auth"><div class="card"><p>Loading…</p></div></div>
+
+  <!-- sign in -->
+  <form id="v-login" class="auth hidden" autocomplete="on"><div class="card">
+    <h2>Team sign in</h2>
+    <label class="f" for="li-email">Email</label>
+    <input id="li-email" type="email" autocomplete="username">
+    <label class="f" for="li-pass">Password</label>
+    <input id="li-pass" type="password" autocomplete="current-password" required>
+    <button class="btn brand block" style="margin-top:18px" type="submit" id="li-btn">Sign in</button>
+    <div id="li-msg"></div>
+    <div class="alt"><button type="button" id="toForgot">Forgot your password?</button></div>
+    <p class="hint hidden" id="li-setup" style="margin-top:14px">First time setting up? Leave email blank and use the shop key.</p>
+  </div></form>
+
+  <!-- forgot -->
+  <form id="v-forgot" class="auth hidden"><div class="card">
+    <h2>Forgot password</h2>
+    <label class="f" for="fg-email">Your login email</label>
+    <input id="fg-email" type="email" autocomplete="username" required>
+    <button class="btn brand block" style="margin-top:18px" type="submit" id="fg-btn">Send reset link</button>
+    <div id="fg-msg"></div>
+    <div class="alt"><button type="button" class="toLogin">Back to sign in</button></div>
+  </div></form>
+
+  <!-- set password from link -->
+  <form id="v-reset" class="auth hidden"><div class="card">
+    <h2>Choose a password</h2>
+    <p id="rs-who"></p>
+    <label class="f" for="rs-pass">New password (10+ characters)</label>
+    <input id="rs-pass" type="password" autocomplete="new-password" minlength="10" required>
+    <button class="btn brand block" style="margin-top:18px" type="submit" id="rs-btn">Save and sign in</button>
+    <div id="rs-msg"></div>
+  </div></form>
+
+  <!-- must change starting password -->
+  <form id="v-change" class="auth hidden"><div class="card">
+    <h2>Pick your own password</h2>
+    <p>You signed in with a starting password. Choose your own to keep going.</p>
+    <label class="f" for="ch-pass">New password (10+ characters)</label>
+    <input id="ch-pass" type="password" autocomplete="new-password" minlength="10" required>
+    <button class="btn brand block" style="margin-top:18px" type="submit" id="ch-btn">Save</button>
+    <div id="ch-msg"></div>
+  </div></form>
+
+  <!-- dashboard -->
+  <div id="v-dash" class="hidden">
+    <div class="hello">Welcome, <span id="d-name"></span><span id="d-role" class="role"></span></div>
+    <div class="note hidden" id="d-shop">You're signed in with the <b>shop key</b>. Open <b>Team</b> and give everyone their own login, including yourself. Then change ADMIN_PASSWORD in Vercel.</div>
+    <div class="hint">What are we working on?</div>
+    <div class="tiles">
+      <a class="tile" href="/admin/estimate"><div class="ic">🧾</div><div class="tt">Estimate Builder</div><div class="ds">Photos → price, send to customer</div></a>
+      <a class="tile" href="/admin/estimate#saved"><div class="ic">📂</div><div class="tt">Saved Estimates</div><div class="ds">Find, edit, update status</div></a>
+      <a class="tile full-only hidden" href="/admin/estimate#prices"><div class="ic">💲</div><div class="tt">Prices</div><div class="ds">Load sizes, add-ons, terms</div></a>
+      <a class="tile full-only hidden" href="/admin/team"><div class="ic">👥</div><div class="tt">Team</div><div class="ds">Logins for the crew</div></a>
+      <a class="tile soon"><div class="ic">📥</div><div class="tt">Pickup Requests</div><div class="ds">Website requests in one list</div></a>
+      <a class="tile soon"><div class="ic">📦</div><div class="tt">Tote Rentals</div><div class="ds">Bookings, deliveries, returns</div></a>
+    </div>
+
+    <form class="card hidden" id="acct" style="margin-top:18px">
+      <h2>Change my password</h2>
+      <label class="f" for="ac-cur">Current password</label>
+      <input id="ac-cur" type="password" autocomplete="current-password" required>
+      <label class="f" for="ac-new">New password (10+ characters)</label>
+      <input id="ac-new" type="password" autocomplete="new-password" minlength="10" required>
+      <button class="btn brand block" style="margin-top:16px" type="submit">Save</button>
+      <div id="ac-msg"></div>
+    </form>
+
+    <div class="row" style="margin-top:22px;justify-content:space-between">
+      <a class="backlink" href="/">← jcjunk.space</a>
+      <span><button class="linkbtn" id="showAcct">My password</button> · <button class="linkbtn" id="signOut">Sign out</button></span>
+    </div>
+  </div>
+</main>
+
+<script>
+  setTimeout(function(){ var l=document.getElementById("v-loading"); if(l && !l.classList.contains("hidden")) l.querySelector("p").textContent="Can't connect right now. Check your signal and refresh."; }, 12000);
+</script>
+<script type="module">
+import { api, whoAmI, isFull, signOutNow, esc } from "/admin/core.js";
+const $ = (s) => document.querySelector(s);
+const views = ["loading","login","forgot","reset","change","dash"];
+const show = (v) => views.forEach(n => $("#v-"+n).classList.toggle("hidden", n !== v));
+const msg = (id, text, ok) => { $(id).innerHTML = text ? `<div class="${ok ? "ok" : "err"}">${esc(text)}</div>` : ""; };
+const resetToken = new URLSearchParams(location.search).get("reset");
+
+async function route() {
+  if (resetToken) {
+    try {
+      const r = await api("/api/admin/login?reset=" + encodeURIComponent(resetToken));
+      if (r.valid) { $("#rs-who").textContent = `${r.name} · ${r.email}`; show("reset"); return; }
+      msg("#li-msg", "That link has expired or was already used. Ask for a new one.");
+    } catch (e) { msg("#li-msg", e.error); }
+    history.replaceState(null, "", "/admin/");
+    show("login"); return;
+  }
+  let s;
+  try { s = await whoAmI(); } catch (e) { $("#v-loading p").textContent = e.error; return; }
+  if (!s.user) { $("#li-setup").classList.toggle("hidden", !s.needsSetup); show("login"); return; }
+  if (s.user.mustChange) { show("change"); return; }
+  const u = s.user;
+  $("#d-name").textContent = (u.name || "").split(" ")[0] || "crew";
+  $("#d-role").textContent = u.roleName || "Crew";
+  $("#d-role").className = "role " + (isFull(u) ? "" : "staff");
+  document.querySelectorAll(".full-only").forEach(el => el.classList.toggle("hidden", !isFull(u)));
+  $("#d-shop").classList.toggle("hidden", !u.shopKey);
+  $("#showAcct").classList.toggle("hidden", Boolean(u.shopKey));
+  show("dash");
+}
+
+$("#v-login").onsubmit = async (e) => {
+  e.preventDefault(); msg("#li-msg"); $("#li-btn").disabled = true;
+  try { await api("/api/admin/login", { method: "POST", body: { action: "login", email: $("#li-email").value.trim(), password: $("#li-pass").value } }); $("#li-pass").value = ""; await route(); }
+  catch (err) { msg("#li-msg", err.error); }
+  finally { $("#li-btn").disabled = false; }
+};
+$("#toForgot").onclick = () => { msg("#fg-msg"); $("#fg-email").value = $("#li-email").value; show("forgot"); };
+document.querySelectorAll(".toLogin").forEach(b => b.onclick = () => { msg("#li-msg"); show("login"); });
+$("#v-forgot").onsubmit = async (e) => {
+  e.preventDefault(); $("#fg-btn").disabled = true;
+  try { const r = await api("/api/admin/login", { method: "POST", body: { action: "forgot", email: $("#fg-email").value.trim() } }); msg("#fg-msg", r.message, r.emailed !== false); }
+  catch (err) { msg("#fg-msg", err.error); }
+  finally { $("#fg-btn").disabled = false; }
+};
+$("#v-reset").onsubmit = async (e) => {
+  e.preventDefault(); $("#rs-btn").disabled = true;
+  try { await api("/api/admin/login", { method: "POST", body: { action: "reset", token: resetToken, password: $("#rs-pass").value } }); location.replace("/admin/"); }
+  catch (err) { msg("#rs-msg", err.error); $("#rs-btn").disabled = false; }
+};
+$("#v-change").onsubmit = async (e) => {
+  e.preventDefault(); $("#ch-btn").disabled = true;
+  try { await api("/api/admin/login", { method: "POST", body: { action: "password", password: $("#ch-pass").value } }); await route(); }
+  catch (err) { msg("#ch-msg", err.error); }
+  finally { $("#ch-btn").disabled = false; }
+};
+$("#showAcct").onclick = () => { $("#acct").classList.toggle("hidden"); };
+$("#acct").onsubmit = async (e) => {
+  e.preventDefault();
+  try { await api("/api/admin/login", { method: "POST", body: { action: "password", current: $("#ac-cur").value, password: $("#ac-new").value } });
+    $("#ac-cur").value = $("#ac-new").value = ""; msg("#ac-msg", "Password changed. Other devices are signed out.", true); }
+  catch (err) { msg("#ac-msg", err.error); }
+};
+$("#signOut").onclick = signOutNow;
+route();
+</script>
+</body>
+</html>

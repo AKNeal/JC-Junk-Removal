@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>JC's Junk Removal — Estimate Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/admin/admin.css">
+</head>
+<body>
+<header class="top">
+  <div class="badge">Est. 2026</div>
+  <div class="wordmark">JC'S <span>Junk</span> Removal</div>
+  <div class="sub">Estimate Builder<span id="areas" class="hidden"></span></div>
+  <div class="divider"></div>
+  <div class="toprow"><a href="/admin/" class="backlink">← Dashboard</a><button class="linkbtn" id="signOutBtn">Sign out</button></div>
+  <nav class="tabs">
+    <button data-tab="new" class="on">New estimate</button>
+    <button data-tab="saved">Saved</button>
+    <button data-tab="prices">Prices</button>
+  </nav>
+</header>
+
+<main>
+  <!-- NEW ESTIMATE -->
+  <section id="tab-new">
+    <div id="editingNote" class="note hidden"></div>
+
+    <div class="card">
+      <h2><span class="step">1</span>Customer</h2>
+      <div class="grid2">
+        <div><label class="f" for="c_name">Name</label><input id="c_name" type="text" data-f="customer.name" autocomplete="off"></div>
+        <div><label class="f" for="c_phone">Phone</label><input id="c_phone" type="tel" data-f="customer.phone" autocomplete="off"></div>
+      </div>
+      <label class="f" for="c_addr">Job address</label><input id="c_addr" type="text" data-f="customer.address" autocomplete="off">
+      <div class="grid2">
+        <div><label class="f" for="c_city">City</label>
+          <select id="c_city" data-f="customer.city"><option>Fairbanks</option><option>North Pole</option><option>Salcha</option><option>Other</option></select></div>
+        <div><label class="f" for="c_email">Email (optional)</label><input id="c_email" type="email" data-f="customer.email" autocomplete="off"></div>
+      </div>
+      <div class="grid2">
+        <div><label class="f" for="e_by">Prepared by</label><input id="e_by" type="text" data-f="preparedBy" placeholder="Your name"></div>
+        <div><label class="f" for="e_date">Job date (if scheduled)</label><input id="e_date" type="date" data-f="jobDate"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="step">2</span>Photos &amp; description</h2>
+      <div class="photos" id="photos"></div>
+      <input type="file" id="fileIn" accept="image/*" multiple class="hidden">
+      <label class="f" for="desc">What's going? Where is it? Stairs, tight spots, heavy stuff?</label>
+      <textarea id="desc" data-f="description" placeholder="e.g. Garage cleanout — old couch, 2 mattresses, fridge, ~15 bags of trash, pile of scrap wood. Ground level, driveway access."></textarea>
+      <div class="row" style="margin-top:12px">
+        <button class="btn brand block hidden" id="aiBtn">✨ Analyze photos &amp; description</button>
+      </div>
+      <div class="hint" id="aiHint" style="margin-top:6px">AI suggests a load size and add-ons. You review and adjust before sending.</div>
+      <div id="aiOut"></div>
+    </div>
+
+    <div class="card">
+      <h2><span class="step">3</span>Load size</h2>
+      <div class="tiers" id="tiers"></div>
+      <div class="addon" style="margin-top:10px">
+        <div class="l">Additional full truck loads<small id="extraPrice"></small></div>
+        <div class="stepper" data-stepper="extraLoads"><button data-d="-1" aria-label="less">−</button><span id="extraLoads">0</span><button data-d="1" aria-label="more">+</button></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="step">4</span>Add-ons &amp; special items</h2>
+      <div id="addons"></div>
+    </div>
+
+    <div class="card">
+      <h2><span class="step">5</span>Custom items &amp; adjustments</h2>
+      <div id="customs"></div>
+      <button class="btn ghost small" id="addCustom">+ Add line item</button>
+      <div class="grid2" style="margin-top:6px">
+        <div><label class="f" for="discType">Discount</label>
+          <div class="row" style="flex-wrap:nowrap">
+            <select id="discType" data-f="discount.type" style="width:90px;flex:none"><option value="pct">%</option><option value="amt">$</option></select>
+            <input id="discVal" type="number" inputmode="decimal" min="0" step="any" data-f="discount.value" data-num>
+          </div></div>
+        <div><label class="f" for="discWhy">Discount reason</label><input id="discWhy" type="text" data-f="discount.reason" placeholder="Military, senior, repeat…"></div>
+      </div>
+      <label class="f" for="cnotes">Notes for the customer</label>
+      <textarea id="cnotes" data-f="notes" style="min-height:70px" placeholder="Anything they should know before pickup"></textarea>
+    </div>
+
+    <div class="card">
+      <h2><span class="step">6</span>Review &amp; send</h2>
+      <table class="sum" id="sum"></table>
+      <div class="hint" id="rangeHint" style="margin-top:8px"></div>
+      <label class="f" for="status">Status</label>
+      <select id="status" data-f="status"><option>Draft</option><option>Sent</option><option>Accepted</option><option>Declined</option><option>Completed</option></select>
+      <div class="row" style="margin-top:14px">
+        <button class="btn brand" id="saveBtn" style="flex:1">Save estimate</button>
+        <button class="btn ghost" id="copyBtn" style="flex:1">Copy for text / email</button>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn ghost" id="pdfBtn" style="flex:1">Download PDF</button>
+        <button class="btn ghost" id="newBtn" style="flex:1">Start new</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- SAVED -->
+  <section id="tab-saved" class="hidden">
+    <div class="card">
+      <h2>Saved estimates</h2>
+      <input type="text" id="search" placeholder="Search name, address, estimate #">
+      <div id="savedList" style="margin-top:6px"><div class="hint">Loading…</div></div>
+    </div>
+  </section>
+
+  <!-- PRICES -->
+  <section id="tab-prices" class="hidden">
+    <div class="note" id="priceNote"></div>
+    <div class="card">
+      <h2>Truck load prices</h2>
+      <label class="f" for="p_yards">Truck capacity (cubic yards)</label>
+      <input id="p_yards" type="number" inputmode="decimal" data-p="truckYards">
+      <table class="ptable" id="tierTable" style="margin-top:10px"></table>
+      <label class="f" for="p_extra">Each additional full load ($)</label>
+      <input id="p_extra" type="number" inputmode="decimal" data-p="extraLoadPrice">
+    </div>
+    <div class="card">
+      <h2>Add-ons</h2>
+      <table class="ptable" id="addonTable"></table>
+      <button class="btn ghost small" id="addAddon" style="margin-top:8px">+ Add add-on</button>
+    </div>
+    <div class="card">
+      <h2>Tax, range &amp; company info</h2>
+      <div class="grid2">
+        <div><label class="f" for="p_tax">Sales tax %</label><input id="p_tax" type="number" inputmode="decimal" data-p="taxPct"></div>
+        <div><label class="f" for="p_rng">Estimate range ± %</label><input id="p_rng" type="number" inputmode="decimal" data-p="rangePct"></div>
+      </div>
+      <div class="grid2">
+        <div><label class="f" for="p_phone">Company phone</label><input id="p_phone" type="text" data-p="company.phone"></div>
+        <div><label class="f" for="p_email">Company email</label><input id="p_email" type="text" data-p="company.email"></div>
+      </div>
+      <label class="f" for="p_web">Website</label><input id="p_web" type="text" data-p="company.web">
+      <label class="f" for="p_terms">Terms printed on every estimate</label>
+      <textarea id="p_terms" data-p="company.terms"></textarea>
+      <button class="btn brand block" id="savePrices" style="margin-top:14px">Save prices for everyone</button>
+    </div>
+  </section>
+</main>
+
+<div class="totalbar" id="totalbar">
+  <div class="in">
+    <div class="grow">
+      <div class="amt" id="tbAmt">$0</div>
+      <div class="rng" id="tbRng">Pick a load size</div>
+    </div>
+    <button class="btn brand small" id="tbSave">Save</button>
+  </div>
+</div>
+
+<div class="modal" id="copyModal">
+  <div class="sheet">
+    <h2 style="font-weight:400;margin:0 0 8px">Estimate text</h2>
+    <p class="hint" style="margin-top:0">Copy didn't go through automatically — select all and copy.</p>
+    <textarea id="copyText" readonly></textarea>
+    <button class="btn block" style="margin-top:10px" id="closeModal">Done</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { api, requireStaff, isFull, signOutNow } from "/admin/core.js";
+document.getElementById("signOutBtn").onclick = signOutNow;
+const me = await requireStaff();
+const profile = me;
+
+/* ---------- defaults (placeholder prices — set real ones on the Prices tab) ---------- */
+const DEFAULT_PRICING = {
+  truckYards: 15,
+  tiers: [
+    {key:"min",     label:"Minimum",  sub:"1–2 items", frac:0.05,  price:99},
+    {key:"eighth",  label:"1/8 load", frac:0.125, price:149},
+    {key:"quarter", label:"1/4 load", frac:0.25,  price:229},
+    {key:"3eighth", label:"3/8 load", frac:0.375, price:299},
+    {key:"half",    label:"1/2 load", frac:0.5,   price:379},
+    {key:"5eighth", label:"5/8 load", frac:0.625, price:449},
+    {key:"3quarter",label:"3/4 load", frac:0.75,  price:519},
+    {key:"7eighth", label:"7/8 load", frac:0.875, price:579},
+    {key:"full",    label:"Full load",frac:1,     price:649}
+  ],
+  extraLoadPrice: 599,
+  addons: [
+    {key:"mattress",   label:"Mattress / box spring", unit:"each", price:35},
+    {key:"tire",       label:"Tire", unit:"each", price:15},
+    {key:"freon",      label:"Fridge / freezer / AC (freon)", unit:"each", price:50},
+    {key:"ewaste",     label:"TV / monitor / electronics", unit:"each", price:25},
+    {key:"heavy",      label:"Heavy debris (concrete, dirt, shingles)", unit:"per 1/4 load", price:75},
+    {key:"bigitem",    label:"Hot tub / piano / safe", unit:"each", price:150},
+    {key:"stairs",     label:"Stairs / long carry", unit:"per flight", price:25},
+    {key:"disassembly",label:"Disassembly / demo", unit:"per 15 min", price:25},
+    {key:"sameday",    label:"Same-day / after-hours", unit:"each", price:50},
+    {key:"travel",     label:"Travel outside service area", unit:"per mile", price:2}
+  ],
+  taxPct: 0,
+  rangePct: 10,
+  company: {
+    name: "JC's Junk Removal",
+    phone: "",
+    email: "JC.junk@yahoo.com",
+    web: "www.jcjunk.space",
+    areas: "Fairbanks · North Pole · Salcha",
+    terms: "This estimate is based on photos and the description provided. Final price is confirmed on site before any work begins and is based on the actual space used in our truck. We do not accept hazardous materials (paint, chemicals, fuel, propane tanks, asbestos, batteries, medical waste). Estimate valid for 30 days."
+  }
+};
+
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const clone = o => JSON.parse(JSON.stringify(o));
+const money = n => "$" + (Math.round(n*100)/100).toLocaleString("en-US",{minimumFractionDigits: n%1?2:0, maximumFractionDigits:2});
+const esc = s => String(s==null?"":s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const round5 = n => Math.round(n/5)*5;
+
+let pricing = clone(DEFAULT_PRICING);
+let draftPricing = null;
+let canEditPrices = isFull(me);
+let ai = null, aiErr = false;
+let saved = [];
+let photos = []; // {blob,url}
+let est = blankEst();
+
+function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+
+function newNumber(){
+  const d = new Date();
+  const p = n => String(n).padStart(2,"0");
+  const r = Math.random().toString(36).slice(2,5).toUpperCase();
+  return `JC-${String(d.getFullYear()).slice(2)}${p(d.getMonth()+1)}${p(d.getDate())}-${r}`;
+}
+function blankEst(){
+  return {
+    number: newNumber(), status:"Draft",
+    customer:{name:"",phone:"",address:"",city:"Fairbanks",email:""},
+    preparedBy: lsGet("jc_by") || (me.shopKey ? "" : me.name) || "", jobDate:"",
+    description:"", ai:null,
+    tierKey:"", extraLoads:0, addons:{}, custom:[],
+    discount:{type:"pct",value:0,reason:""}, notes:"",
+    createdAt:null, updatedAt:null, isNew:true
+  };
+}
+
+/* ---------- toast ---------- */
+let toastT;
+function toast(msg, ms){
+  const t = $("#toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastT); toastT = setTimeout(()=>t.classList.remove("show"), ms||2600);
+}
+
+/* ---------- tabs ---------- */
+function showTab(name){
+  $$("nav.tabs button").forEach(b=>b.classList.toggle("on", b.dataset.tab===name));
+  ["new","saved","prices"].forEach(n=>$("#tab-"+n).classList.toggle("hidden", n!==name));
+  $("#totalbar").classList.toggle("hidden", name!=="new");
+  if(name==="prices") renderPrices();
+  window.scrollTo(0,0);
+}
+$$("nav.tabs button").forEach(b=>b.addEventListener("click",()=>{ showTab(b.dataset.tab); try{ history.replaceState(null,"", b.dataset.tab==="new" ? location.pathname : "#"+b.dataset.tab); }catch(e){} }));
+
+/* ---------- path helpers ---------- */
+function getPath(o,p){ return p.split(".").reduce((a,k)=>a==null?a:a[k], o); }
+function setPath(o,p,v){ const ks=p.split("."); let a=o; ks.slice(0,-1).forEach(k=>{ if(a[k]==null) a[k]={}; a=a[k]; }); a[ks[ks.length-1]]=v; }
+
+/* ---------- calc ---------- */
+function compute(){
+  const lines = [];
+  const tier = pricing.tiers.find(t=>t.key===est.tierKey);
+  if(tier) lines.push({desc:`${tier.label} truck space`, qty:1, unit:tier.price, total:tier.price});
+  if(est.extraLoads>0) lines.push({desc:"Additional full truck load", qty:est.extraLoads, unit:pricing.extraLoadPrice, total:est.extraLoads*pricing.extraLoadPrice});
+  pricing.addons.forEach(a=>{
+    const q = Number(est.addons[a.key]||0);
+    if(q>0) lines.push({desc:`${a.label}${a.unit && a.unit!=="each" ? " ("+a.unit+")":""}`, qty:q, unit:a.price, total:q*a.price});
+  });
+  est.custom.forEach(c=>{
+    const amt = Number(c.amount)||0;
+    if(c.desc || amt) lines.push({desc:c.desc||"Custom item", qty:1, unit:amt, total:amt});
+  });
+  const subtotal = lines.reduce((s,l)=>s+l.total,0);
+  const dv = Number(est.discount.value)||0;
+  let discount = est.discount.type==="pct" ? subtotal*dv/100 : dv;
+  discount = Math.min(Math.max(discount,0), subtotal);
+  const taxable = subtotal - discount;
+  const tax = taxable * (Number(pricing.taxPct)||0)/100;
+  const total = taxable + tax;
+  const r = (Number(pricing.rangePct)||0)/100;
+  return {lines, subtotal, discount, tax, total, low: r? round5(total*(1-r)) : total, high: r? round5(total*(1+r)) : total};
+}
+
+/* ---------- render: form ---------- */
+function renderForm(){
+  $$("[data-f]").forEach(el=>{
+    const v = getPath(est, el.dataset.f);
+    if(document.activeElement!==el) el.value = v==null ? "" : v;
+  });
+  renderPhotos(); renderAI(); renderTiers(); renderAddons(); renderCustoms(); renderSummary();
+  const note = $("#editingNote");
+  if(!est.isNew){ note.classList.remove("hidden"); note.textContent = `Editing ${est.number}. Save to update it.`; }
+  else note.classList.add("hidden");
+}
+
+function renderPhotos(){
+  const wrap = $("#photos");
+  wrap.innerHTML = photos.map((p,i)=>`<div class="ph"><img src="${p.url}" alt="Job photo ${i+1}"><button data-rm="${i}" aria-label="Remove photo">×</button></div>`).join("")
+    + `<div class="addph" id="addPh" role="button" tabindex="0"><div><b>+</b>Add photos</div></div>`;
+}
+$("#photos").addEventListener("click", e=>{
+  const rm = e.target.closest("[data-rm]");
+  if(rm){ const i=+rm.dataset.rm; URL.revokeObjectURL(photos[i].url); photos.splice(i,1); renderPhotos(); return; }
+  if(e.target.closest("#addPh")) $("#fileIn").click();
+});
+$("#fileIn").addEventListener("change", async e=>{
+  const files = Array.from(e.target.files||[]).filter(f=>f.type.startsWith("image/"));
+  e.target.value = "";
+  for(const f of files.slice(0, Math.max(0, 6-photos.length))){
+    try{ const blob = await shrink(f); photos.push({blob, url:URL.createObjectURL(blob)}); }
+    catch(err){ toast("Couldn't read one of those photos."); }
+  }
+  if(files.length + photos.length > 6) toast("Up to 6 photos per estimate.");
+  renderPhotos();
+});
+async function shrink(file){
+  const max = 1024;
+  let bmp;
+  try{ bmp = await createImageBitmap(file, {imageOrientation:"from-image"}); }
+  catch(e){ bmp = await new Promise((res,rej)=>{ const im=new Image(); im.onload=()=>res(im); im.onerror=rej; im.src=URL.createObjectURL(file); }); }
+  const w = bmp.width, h = bmp.height, s = Math.min(1, max/Math.max(w,h));
+  const c = document.createElement("canvas"); c.width=Math.round(w*s); c.height=Math.round(h*s);
+  c.getContext("2d").drawImage(bmp,0,0,c.width,c.height);
+  return await new Promise(res=>c.toBlob(b=>res(b||file),"image/jpeg",0.75));
+}
+
+function renderTiers(){
+  const wrap = $("#tiers");
+  wrap.innerHTML = pricing.tiers.map(t=>`
+    <button class="tier ${est.tierKey===t.key?"on":""}" data-tier="${esc(t.key)}">
+      <div class="t">${esc(t.label)}</div>
+      <div class="bar"><i style="width:${Math.round((t.frac||0)*100)}%"></i></div>
+      <div class="p">${money(t.price)}${t.sub?` · ${esc(t.sub)}`:` · ~${Math.round((t.frac||0)*pricing.truckYards*10)/10} yd³`}</div>
+    </button>`).join("")
+    + `<button class="tier none ${!est.tierKey?"on":""}" data-tier=""><div class="t">No truck space (add-ons / custom only)</div></button>`;
+  $("#extraLoads").textContent = est.extraLoads;
+  $("#extraPrice").textContent = money(pricing.extraLoadPrice) + " each";
+}
+$("#tiers").addEventListener("click", e=>{
+  const b = e.target.closest("[data-tier]"); if(!b) return;
+  est.tierKey = b.dataset.tier; renderTiers(); renderSummary();
+});
+document.querySelector('[data-stepper="extraLoads"]').addEventListener("click", e=>{
+  const b = e.target.closest("[data-d]"); if(!b) return;
+  est.extraLoads = Math.max(0, (est.extraLoads||0) + Number(b.dataset.d)); renderTiers(); renderSummary();
+});
+
+function renderAddons(){
+  $("#addons").innerHTML = pricing.addons.map(a=>`
+    <div class="addon">
+      <div class="l">${esc(a.label)}<small>${money(a.price)} ${esc(a.unit||"each")}</small></div>
+      <div class="stepper" data-addon="${esc(a.key)}"><button data-d="-1" aria-label="less">−</button><span>${Number(est.addons[a.key]||0)}</span><button data-d="1" aria-label="more">+</button></div>
+    </div>`).join("");
+}
+$("#addons").addEventListener("click", e=>{
+  const b = e.target.closest("[data-d]"); if(!b) return;
+  const k = b.closest("[data-addon]").dataset.addon;
+  est.addons[k] = Math.max(0, Number(est.addons[k]||0) + Number(b.dataset.d));
+  if(!est.addons[k]) delete est.addons[k];
+  renderAddons(); renderSummary();
+});
+
+function renderCustoms(){
+  $("#customs").innerHTML = est.custom.map((c,i)=>`
+    <div class="custom">
+      <input type="text" placeholder="Description" value="${esc(c.desc)}" data-ci="${i}" data-ck="desc">
+      <input type="number" inputmode="decimal" step="any" placeholder="$" value="${c.amount===""||c.amount==null?"":esc(c.amount)}" data-ci="${i}" data-ck="amount">
+      <button data-cdel="${i}" aria-label="Remove">×</button>
+    </div>`).join("");
+}
+$("#addCustom").addEventListener("click", ()=>{ est.custom.push({desc:"",amount:""}); renderCustoms(); });
+$("#customs").addEventListener("input", e=>{
+  const el = e.target; if(!el.dataset.ci) return;
+  est.custom[+el.dataset.ci][el.dataset.ck] = el.value; renderSummary();
+});
+$("#customs").addEventListener("click", e=>{
+  const b = e.target.closest("[data-cdel]"); if(!b) return;
+  est.custom.splice(+b.dataset.cdel,1); renderCustoms(); renderSummary();
+});
+
+/* generic bound fields */
+document.addEventListener("input", e=>{
+  const el = e.target; if(!el.dataset || !el.dataset.f) return;
+  let v = el.value; if(el.hasAttribute("data-num")) v = v===""?0:Number(v);
+  setPath(est, el.dataset.f, v);
+  if(el.dataset.f==="preparedBy") lsSet("jc_by", v);
+  renderSummary();
+});
+document.addEventListener("change", e=>{
+  const el = e.target; if(!el.dataset || !el.dataset.f || el.tagName!=="SELECT") return;
+  setPath(est, el.dataset.f, el.value); renderSummary();
+});
+
+function renderSummary(){
+  const c = compute();
+  const rows = c.lines.map(l=>`<tr><td>${esc(l.desc)}${l.qty>1?` × ${l.qty}`:""}</td><td class="r">${money(l.total)}</td></tr>`).join("")
+    || `<tr><td class="hint">Nothing added yet</td><td></td></tr>`;
+  $("#sum").innerHTML = rows
+    + (c.discount? `<tr><td>Discount${est.discount.reason?` (${esc(est.discount.reason)})`:""}</td><td class="r">−${money(c.discount)}</td></tr>`:"")
+    + (c.tax? `<tr><td>Sales tax (${pricing.taxPct}%)</td><td class="r">${money(c.tax)}</td></tr>`:"")
+    + `<tr class="tot"><td>Estimated total</td><td class="r">${money(c.total)}</td></tr>`;
+  const rangeTxt = (c.total && pricing.rangePct) ? `Range ${money(c.low)} – ${money(c.high)}` : "";
+  $("#rangeHint").textContent = rangeTxt ? rangeTxt + " — final price confirmed on site." : "";
+  $("#tbAmt").textContent = money(c.total);
+  $("#tbRng").textContent = c.total ? (rangeTxt || est.number) : "Pick a load size";
+}
+
+/* ---------- AI ---------- */
+function renderAI(){
+  const out = $("#aiOut"); const a = est.ai;
+  if(!a){ out.innerHTML=""; return; }
+  const conf = String(a.confidence||"").toLowerCase();
+  out.innerHTML = `<div class="ai">
+    <h3>AI read of the job ${conf?`<span class="pill ${esc(conf)}">${esc(conf)} confidence</span>`:""}</h3>
+    <div>${esc(a.summary||"")}</div>
+    ${a.est_cubic_yards?`<div class="hint" style="margin-top:6px">≈ ${esc(a.est_cubic_yards)} cubic yards${a.crew_size?` · ${esc(a.crew_size)}-person crew`:""}${a.est_hours?` · ~${esc(a.est_hours)} hr on site`:""}</div>`:""}
+    ${Array.isArray(a.items)&&a.items.length?`<ul>${a.items.slice(0,25).map(i=>`<li>${esc(i.qty&&i.qty>1?i.qty+" × ":"")}${esc(i.name)}</li>`).join("")}</ul>`:""}
+    ${Array.isArray(a.flags)&&a.flags.length?a.flags.map(f=>`<div class="flag">⚠️ ${esc(f)}</div>`).join(""):""}
+    <div class="hint" style="margin-top:8px">Load size and add-ons below were filled in from this. Check them against what you see.</div>
+  </div>`;
+}
+
+$("#aiBtn").addEventListener("click", runAI);
+function blobToB64(b){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(String(r.result).split(",")[1]); r.onerror=rej; r.readAsDataURL(b); }); }
+async function runAI(){
+  if(!photos.length && !est.description.trim()){ toast("Add a photo or a description first."); return; }
+  const btn = $("#aiBtn"); btn.disabled = true; btn.innerHTML = `<span class="spin"></span> Looking at the job…`;
+  try{
+    const images = [];
+    for (const p of photos) images.push(await blobToB64(p.blob));
+    const r = await api("/api/admin/analyze", { method:"POST", body:{ description: est.description || "", images, pricing } });
+    applyAI(r.result);
+    toast("Done — review the load size and add-ons.");
+  }catch(err){
+    if (err && err.code === "not_configured") { $("#aiBtn").classList.add("hidden"); $("#aiHint").textContent = "AI photo reading isn't set up yet — pick the load size below."; }
+    toast((err && err.error) || "AI couldn't read that one. Try again or pick the size by hand.", 4000);
+  }finally{
+    btn.disabled = false; btn.innerHTML = "✨ Analyze photos &amp; description";
+  }
+}
+function parseJSON(t){
+  if(!t) return null;
+  const s = t.indexOf("{"), e = t.lastIndexOf("}");
+  if(s<0||e<0) return null;
+  try{ return JSON.parse(t.slice(s,e+1)); }catch(_){ return null; }
+}
+function applyAI(v){
+  const keys = pricing.tiers.map(t=>t.key);
+  if(keys.includes(v.load_tier)) est.tierKey = v.load_tier;
+  const x = parseInt(v.extra_full_loads,10); est.extraLoads = isFinite(x)&&x>0 ? Math.min(x,20) : 0;
+  if(v.addons && typeof v.addons==="object"){
+    const ak = pricing.addons.map(a=>a.key);
+    Object.entries(v.addons).forEach(([k,q])=>{ const n=Math.max(0,Math.round(Number(q)||0)); if(ak.includes(k)){ if(n) est.addons[k]=Math.min(n,99); } });
+  }
+  est.ai = {
+    summary: String(v.summary||"").slice(0,600),
+    items: Array.isArray(v.items)? v.items.slice(0,40).map(i=>({name:String(i&&i.name||"").slice(0,80), qty:Number(i&&i.qty)||1})) : [],
+    est_cubic_yards: Number(v.est_cubic_yards)||null,
+    flags: Array.isArray(v.flags)? v.flags.slice(0,8).map(f=>String(f).slice(0,200)) : [],
+    crew_size: Number(v.crew_size)||null,
+    est_hours: Number(v.est_hours)||null,
+    confidence: String(v.confidence||"").slice(0,10)
+  };
+  renderAI(); renderTiers(); renderAddons(); renderSummary();
+}
+
+/* ---------- customer text ---------- */
+function estimateText(){
+  const c = compute(), co = pricing.company;
+  const L = [];
+  L.push(`${co.name} — Estimate ${est.number}`);
+  L.push(`Date: ${new Date().toLocaleDateString("en-US")}`);
+  if(est.customer.name) L.push(`For: ${est.customer.name}`);
+  const addr = [est.customer.address, est.customer.city].filter(Boolean).join(", ");
+  if(addr) L.push(`Job: ${addr}`);
+  if(est.jobDate) L.push(`Scheduled: ${new Date(est.jobDate+"T12:00").toLocaleDateString("en-US")}`);
+  L.push("");
+  c.lines.forEach(l=>L.push(`• ${l.desc}${l.qty>1?` × ${l.qty}`:""}: ${money(l.total)}`));
+  if(c.discount) L.push(`• Discount${est.discount.reason?` (${est.discount.reason})`:""}: −${money(c.discount)}`);
+  if(c.tax) L.push(`• Sales tax: ${money(c.tax)}`);
+  L.push("");
+  L.push(`Estimated total: ${money(c.total)}`);
+  if(pricing.rangePct && c.total) L.push(`Expected range: ${money(c.low)} – ${money(c.high)}`);
+  if(est.notes) { L.push(""); L.push(est.notes); }
+  L.push(""); L.push(co.terms);
+  const contact = [co.phone, co.email, co.web].filter(Boolean).join(" · ");
+  if(contact){ L.push(""); L.push(contact); }
+  if(est.preparedBy) L.push(`Prepared by ${est.preparedBy}`);
+  return L.join("\n");
+}
+$("#copyBtn").addEventListener("click", async ()=>{
+  const t = estimateText();
+  try{ await navigator.clipboard.writeText(t); toast("Copied — paste it into a text or email."); }
+  catch(e){ $("#copyText").value = t; $("#copyModal").classList.add("show"); setTimeout(()=>$("#copyText").select(),50); }
+});
+$("#closeModal").addEventListener("click", ()=>$("#copyModal").classList.remove("show"));
+
+/* ---------- PDF ---------- */
+let jsPDFLoad;
+function loadJsPDF(){
+  if(window.jspdf) return Promise.resolve();
+  if(!jsPDFLoad) jsPDFLoad = new Promise((res,rej)=>{
+    const s=document.createElement("script"); s.src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+    s.onload=res; s.onerror=()=>{jsPDFLoad=null; rej();}; document.head.appendChild(s);
+  });
+  return jsPDFLoad;
+}
+$("#pdfBtn").addEventListener("click", async ()=>{
+  const btn=$("#pdfBtn"); btn.disabled=true;
+  try{
+    await loadJsPDF();
+    const doc = buildPDF();
+    const nm = (est.customer.name||"customer").replace(/[^a-z0-9]+/gi,"-").replace(/^-|-$/g,"").slice(0,30) || "customer";
+    doc.save(`${est.number}-${nm}.pdf`);
+  }catch(e){
+    console.error(e); toast("Couldn't make the PDF. Use Copy instead.", 3200);
+  }finally{ btn.disabled=false; }
+});
+function buildPDF(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:"pt", format:"letter"});
+  const W = 612, M = 48; let y = 0;
+  const c = compute(), co = pricing.company;
+  doc.setFillColor(13,13,13); doc.rect(0,0,W,92,"F");
+  doc.setFillColor(192,57,43); doc.rect(0,92,W,6,"F");
+  doc.setTextColor(255,255,255); doc.setFont("helvetica","bold"); doc.setFontSize(24);
+  doc.text("JC'S", M, 50); const w1 = doc.getTextWidth("JC'S ");
+  doc.setTextColor(192,57,43); doc.text("JUNK", M+w1, 50); const w2 = doc.getTextWidth("JUNK ");
+  doc.setTextColor(255,255,255); doc.text("REMOVAL", M+w1+w2, 50);
+  doc.setFont("helvetica","normal"); doc.setFontSize(10); doc.setTextColor(200,204,208);
+  doc.text(("HAUL IT. CLEAR IT. DONE.   ·   "+(co.areas||"")).toUpperCase(), M, 70);
+  doc.setFont("helvetica","bold"); doc.setFontSize(18); doc.setTextColor(255,255,255);
+  doc.text("ESTIMATE", W-M, 46, {align:"right"});
+  doc.setFont("helvetica","normal"); doc.setFontSize(10); doc.setTextColor(200,204,208);
+  doc.text(est.number, W-M, 62, {align:"right"});
+  doc.text(new Date().toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"}), W-M, 76, {align:"right"});
+
+  y = 130; doc.setTextColor(28,31,34);
+  doc.setFont("helvetica","bold"); doc.setFontSize(10); doc.text("PREPARED FOR", M, y);
+  doc.text("JOB DETAILS", 330, y);
+  doc.setFont("helvetica","normal"); doc.setFontSize(11);
+  const left = [est.customer.name, est.customer.phone, est.customer.email].filter(Boolean);
+  const right = [[est.customer.address, est.customer.city].filter(Boolean).join(", "),
+    est.jobDate ? "Scheduled: "+new Date(est.jobDate+"T12:00").toLocaleDateString("en-US") : "",
+    est.preparedBy ? "Prepared by: "+est.preparedBy : ""].filter(Boolean);
+  left.forEach((t,i)=>doc.text(String(t), M, y+18+i*15));
+  right.forEach((t,i)=>doc.text(doc.splitTextToSize(String(t),234)[0], 330, y+18+i*15));
+  y += 30 + Math.max(left.length,right.length,1)*15 + 10;
+
+  doc.setFillColor(246,244,240); doc.rect(M, y, W-2*M, 24, "F");
+  doc.setFont("helvetica","bold"); doc.setFontSize(10);
+  doc.text("DESCRIPTION", M+10, y+16); doc.text("QTY", 400, y+16, {align:"right"}); doc.text("AMOUNT", W-M-10, y+16, {align:"right"});
+  y += 24; doc.setFont("helvetica","normal"); doc.setFontSize(11);
+  const row = (d,q,a)=>{
+    const lines = doc.splitTextToSize(d, 300);
+    if(y + lines.length*14 + 12 > 740){ doc.addPage(); y = 60; }
+    doc.text(lines, M+10, y+18); if(q) doc.text(String(q), 400, y+18, {align:"right"}); doc.text(a, W-M-10, y+18, {align:"right"});
+    y += lines.length*14 + 10; doc.setDrawColor(227,224,218); doc.line(M, y, W-M, y);
+  };
+  c.lines.forEach(l=>row(l.desc, l.qty, money(l.total)));
+  if(c.discount) row("Discount"+(est.discount.reason?` (${est.discount.reason})`:""), "", "-"+money(c.discount));
+  if(c.tax) row(`Sales tax (${pricing.taxPct}%)`, "", money(c.tax));
+  y += 16;
+  if(y > 690){ doc.addPage(); y = 60; }
+  doc.setFillColor(192,57,43); doc.rect(330, y, W-M-330, 34, "F");
+  doc.setTextColor(255,255,255); doc.setFont("helvetica","bold"); doc.setFontSize(12);
+  doc.text("ESTIMATED TOTAL", 342, y+21); doc.setFontSize(15); doc.text(money(c.total), W-M-12, y+22, {align:"right"});
+  y += 34; doc.setTextColor(107,113,120); doc.setFont("helvetica","normal"); doc.setFontSize(10);
+  if(pricing.rangePct && c.total){ y+=16; doc.text(`Expected range ${money(c.low)} – ${money(c.high)}`, W-M, y, {align:"right"}); }
+  y += 24; doc.setTextColor(28,31,34);
+  if(est.notes){
+    if(y > 680){ doc.addPage(); y = 60; }
+    doc.setFont("helvetica","bold"); doc.text("NOTES", M, y); y+=14; doc.setFont("helvetica","normal");
+    const n = doc.splitTextToSize(est.notes, W-2*M); doc.text(n, M, y); y += n.length*13 + 14;
+  }
+  const terms = doc.splitTextToSize(co.terms||"", W-2*M);
+  if(y + terms.length*12 > 720){ doc.addPage(); y = 60; }
+  doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.text("TERMS", M, y); y+=12;
+  doc.setFont("helvetica","normal"); doc.setTextColor(80,85,90); doc.text(terms, M, y);
+  const contact = [co.phone, co.email, co.web].filter(Boolean).join("   ·   ");
+  doc.setFontSize(10); doc.setTextColor(28,31,34);
+  const pages = doc.getNumberOfPages();
+  for(let p=1;p<=pages;p++){ doc.setPage(p); doc.setDrawColor(192,57,43); doc.line(M,752,W-M,752); doc.text(contact || co.name, W/2, 770, {align:"center"}); }
+  return doc;
+}
+
+/* ---------- save / load ---------- */
+function estDoc(){
+  const c = compute();
+  const out = clone(est);
+  delete out.isNew;
+  out.lines = c.lines; out.subtotal = c.subtotal; out.discountAmt = c.discount; out.tax = c.tax;
+  out.total = c.total; out.low = c.low; out.high = c.high; out.taxPct = pricing.taxPct;
+  out.updatedAt = Date.now(); if(!out.createdAt) out.createdAt = out.updatedAt;
+  out.searchText = [out.number, out.customer.name, out.customer.address, out.customer.city, out.customer.phone].join(" ").toLowerCase();
+  return out;
+}
+let saving = false;
+async function save(){
+  if(saving) return;
+  const c = compute();
+  if(!est.customer.name && !est.customer.address){ toast("Add a customer name or address first."); return; }
+  if(!c.total){ toast("Pick a load size or add an item first."); return; }
+  if(!est.preparedBy){ toast("Add your name under 'Prepared by'."); $("#e_by").focus(); return; }
+  const d = estDoc();
+  saving = true; $("#saveBtn").disabled = true; $("#tbSave").disabled = true;
+  try{
+    const r = await api("/api/admin/estimates", { method:"POST", body:{ action:"save", estimate:d } });
+    est.createdAt = r.estimate.createdAt; est.createdBy = r.estimate.createdBy; est.createdByName = r.estimate.createdByName; est.isNew = false; renderForm();
+    loadAll();
+    toast(`Saved ${d.number}`);
+  }catch(e){
+    console.error(e);
+    if(e && e.status===401){ toast("You've been signed out. Sign in again (your estimate is still on screen).", 4500); }
+    else toast((e && e.error) || "Couldn't save — check signal and try again.", 3500);
+  }finally{ saving=false; $("#saveBtn").disabled=false; $("#tbSave").disabled=false; }
+}
+$("#saveBtn").addEventListener("click", save);
+$("#tbSave").addEventListener("click", save);
+$("#newBtn").addEventListener("click", ()=>{
+  photos.forEach(p=>URL.revokeObjectURL(p.url)); photos = [];
+  est = blankEst(); renderForm(); window.scrollTo(0,0); toast("New estimate started.");
+});
+
+function loadEstimate(d){
+  photos.forEach(p=>URL.revokeObjectURL(p.url)); photos = [];
+  const b = blankEst();
+  est = Object.assign(b, clone(d), {isNew:false});
+  est.customer = Object.assign(blankEst().customer, d.customer||{});
+  est.discount = Object.assign({type:"pct",value:0,reason:""}, d.discount||{});
+  est.addons = d.addons||{}; est.custom = d.custom||[];
+  ["lines","subtotal","discountAmt","tax","total","low","high","taxPct","searchText"].forEach(k=>delete est[k]);
+  renderForm(); showTab("new");
+}
+
+function renderSaved(){
+  const q = ($("#search").value||"").toLowerCase().trim();
+  const list = saved.filter(d=>!q || (d.searchText||"").includes(q));
+  const el = $("#savedList");
+  if(!list.length){ el.innerHTML = `<div class="hint" style="padding:10px 0">${saved.length?"No matches.":"No saved estimates yet."}</div>`; return; }
+  el.innerHTML = list.map(d=>`
+    <div class="saved" data-open="${esc(d.number)}">
+      <div class="m"><b>${esc(d.customer&&d.customer.name||"(no name)")}<span class="st ${esc(d.status)}">${esc(d.status||"Draft")}</span></b>
+        <small>${esc(d.number)} · ${esc([d.customer&&d.customer.address, d.customer&&d.customer.city].filter(Boolean).join(", "))}<br>${new Date(d.updatedAt||d.createdAt||0).toLocaleDateString("en-US")}${d.preparedBy?` · ${esc(d.preparedBy)}`:""}</small></div>
+      <div class="a">${money(d.total||0)}</div>
+      ${(canEditPrices || d.createdBy===me.id) ? `<button class="btn danger small" data-del="${esc(d.number)}" aria-label="Delete">🗑</button>` : ""}
+    </div>`).join("");
+}
+$("#search").addEventListener("input", renderSaved);
+let delArm = null, delT;
+$("#savedList").addEventListener("click", async e=>{
+  const del = e.target.closest("[data-del]");
+  if(del){
+    e.stopPropagation();
+    const n = del.dataset.del;
+    if(delArm!==n){ delArm=n; del.textContent="Delete?"; clearTimeout(delT); delT=setTimeout(()=>{delArm=null; renderSaved();},3000); return; }
+    delArm=null;
+    try{ await api("/api/admin/estimates", { method:"POST", body:{ action:"delete", number:n } }); toast("Deleted."); loadAll(); }catch(err){ toast(err.error || "Couldn't delete."); }
+    return;
+  }
+  const o = e.target.closest("[data-open]");
+  if(o){ const d = saved.find(x=>x.number===o.dataset.open); if(d) loadEstimate(d); }
+});
+
+
+/* ---------- prices tab ---------- */
+function renderPrices(){
+  draftPricing = clone(pricing);
+  const ro = !canEditPrices;
+  $("#priceNote").innerHTML = ro
+    ? "These are the prices everyone uses. Only an owner can change them."
+    : "Changes here apply to every employee's new estimates. <b>Starting prices are placeholders</b> — replace them with JC's real rates.";
+  $$("[data-p]").forEach(el=>{ el.value = getPath(draftPricing, el.dataset.p) ?? ""; el.disabled = ro; });
+  $("#tierTable").innerHTML = draftPricing.tiers.map((t,i)=>`<tr><td>${esc(t.label)}${t.sub?` <span class="hint">(${esc(t.sub)})</span>`:""}</td><td class="n"><input type="number" inputmode="decimal" value="${esc(t.price)}" data-tp="${i}" ${ro?"disabled":""} aria-label="${esc(t.label)} price"></td></tr>`).join("");
+  $("#addonTable").innerHTML = draftPricing.addons.map((a,i)=>`<tr>
+      <td><input type="text" value="${esc(a.label)}" data-ap="${i}" data-k="label" ${ro?"disabled":""} aria-label="Add-on name"></td>
+      <td style="width:110px"><input type="text" value="${esc(a.unit||"each")}" data-ap="${i}" data-k="unit" ${ro?"disabled":""} aria-label="Unit"></td>
+      <td class="n" style="width:90px"><input type="number" inputmode="decimal" value="${esc(a.price)}" data-ap="${i}" data-k="price" ${ro?"disabled":""} aria-label="Price"></td>
+      ${ro?"":`<td style="width:40px"><button class="btn danger small" data-adel="${i}" aria-label="Remove">×</button></td>`}
+    </tr>`).join("");
+  $("#addAddon").classList.toggle("hidden", ro);
+  $("#savePrices").classList.toggle("hidden", ro);
+}
+$("#tab-prices").addEventListener("input", e=>{
+  const el = e.target; if(!draftPricing) return;
+  if(el.dataset.p){ const num = el.type==="number"; setPath(draftPricing, el.dataset.p, num ? Number(el.value)||0 : el.value); }
+  if(el.dataset.tp!=null) draftPricing.tiers[+el.dataset.tp].price = Number(el.value)||0;
+  if(el.dataset.ap!=null){ const a = draftPricing.addons[+el.dataset.ap]; a[el.dataset.k] = el.dataset.k==="price" ? Number(el.value)||0 : el.value; }
+});
+$("#addonTable").addEventListener("click", e=>{
+  const b = e.target.closest("[data-adel]"); if(!b) return;
+  draftPricing.addons.splice(+b.dataset.adel,1);
+  const keep = clone(draftPricing); pricing_redraw(keep);
+});
+$("#addAddon").addEventListener("click", ()=>{
+  draftPricing.addons.push({key:"a"+Date.now().toString(36), label:"New add-on", unit:"each", price:0});
+  pricing_redraw(clone(draftPricing));
+});
+function pricing_redraw(dp){ const real = pricing; pricing = dp; renderPrices(); pricing = real; draftPricing = dp; }
+$("#savePrices").addEventListener("click", async ()=>{
+  if(!canEditPrices) return;
+  const b = $("#savePrices"); b.disabled = true;
+  try{
+    const out = clone(draftPricing); out.updatedAt = Date.now();
+    const r = await api("/api/admin/estimates", { method:"POST", body:{ action:"prices", pricing: out } });
+    applyPricing(r.pricing);
+    toast("Prices saved for everyone.");
+  }catch(e){ toast("Couldn't save prices — only owners can change prices.", 3500); }
+  finally{ b.disabled=false; }
+});
+
+function applyPricing(p){
+  if(!p || !Array.isArray(p.tiers) || !p.tiers.length) { pricing = clone(DEFAULT_PRICING); }
+  else {
+    pricing = Object.assign(clone(DEFAULT_PRICING), p);
+    pricing.company = Object.assign(clone(DEFAULT_PRICING.company), p.company||{});
+  }
+  $("#areas").textContent = pricing.company.areas || DEFAULT_PRICING.company.areas;
+  renderTiers(); renderAddons(); renderSummary();
+  if(!$("#tab-prices").classList.contains("hidden") && !canEditPrices) renderPrices();
+}
+
+/* ---------- boot ---------- */
+renderForm();
+
+// ---------- live data ----------
+$("#areas").textContent = DEFAULT_PRICING.company.areas;
+function setAI(on){
+  $("#aiBtn").classList.toggle("hidden", !on);
+  $("#aiHint").textContent = on ? "AI suggests a load size and add-ons. You review and adjust before sending."
+    : "Add photos and notes for the record, then pick the load size below.";
+}
+async function loadAll(){
+  try{
+    const r = await api("/api/admin/estimates");
+    applyPricing(r.pricing);
+    setAI(r.aiReady);
+    saved = r.estimates || []; renderSaved();
+  }catch(e){
+    if (e.status === 401) { location.replace("/admin/"); return; }
+    $("#savedList").innerHTML = `<div class="hint" style="padding:10px 0">${esc(e.error || "Saved estimates aren't available right now.")}</div>`;
+  }
+}
+loadAll();
+document.querySelector('nav.tabs button[data-tab="saved"]').addEventListener("click", loadAll);
+const startTab = (location.hash||"").slice(1);
+if (startTab==="saved" || startTab==="prices") showTab(startTab);
+
+</script>
+</body>
+</html>
