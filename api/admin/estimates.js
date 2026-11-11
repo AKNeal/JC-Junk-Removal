@@ -37,6 +37,7 @@ async function list(res, me) {
     estimates: rows,
     pricing: await store.getJSON("config:pricing"),
     me: { id: me.id, name: me.name, role: me.role, canEditPrices: auth.isFull(me) },
+    aiReady: Boolean(process.env.ANTHROPIC_API_KEY || process.env.GEMINI_API_KEY),
   });
 }
 

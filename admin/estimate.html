@@ -53,7 +53,7 @@
       <label class="f" for="desc">What's going? Where is it? Stairs, tight spots, heavy stuff?</label>
       <textarea id="desc" data-f="description" placeholder="e.g. Garage cleanout — old couch, 2 mattresses, fridge, ~15 bags of trash, pile of scrap wood. Ground level, driveway access."></textarea>
       <div class="row" style="margin-top:12px">
-        <button class="btn brand block" id="aiBtn">✨ Analyze photos &amp; description</button>
+        <button class="btn brand block hidden" id="aiBtn">✨ Analyze photos &amp; description</button>
       </div>
       <div class="hint" id="aiHint" style="margin-top:6px">AI suggests a load size and add-ons. You review and adjust before sending.</div>
       <div id="aiOut"></div>
@@ -740,10 +740,16 @@ renderForm();
 
 // ---------- live data ----------
 $("#areas").textContent = DEFAULT_PRICING.company.areas;
+function setAI(on){
+  $("#aiBtn").classList.toggle("hidden", !on);
+  $("#aiHint").textContent = on ? "AI suggests a load size and add-ons. You review and adjust before sending."
+    : "Add photos and notes for the record, then pick the load size below.";
+}
 async function loadAll(){
   try{
     const r = await api("/api/admin/estimates");
     applyPricing(r.pricing);
+    setAI(r.aiReady);
     saved = r.estimates || []; renderSaved();
   }catch(e){
     if (e.status === 401) { location.replace("/admin/"); return; }
