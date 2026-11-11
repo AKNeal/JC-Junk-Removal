@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>JC's Junk Removal — Team</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/admin/admin.css">
+</head>
+<body>
+<div id="hdr"></div>
+<main>
+  <form class="card" id="add">
+    <h2>Add someone</h2>
+    <div class="grid2">
+      <div><label class="f" for="a-name">Name</label><input id="a-name" type="text" required autocomplete="off"></div>
+      <div><label class="f" for="a-email">Email (their login)</label><input id="a-email" type="email" required autocomplete="off"></div>
+    </div>
+    <label class="f" for="a-role">Access</label>
+    <select id="a-role"><option value="crew">Crew — estimates only</option><option value="admin">Site admin — also team &amp; prices</option><option value="owner">Owner — also team &amp; prices</option></select>
+    <label class="f" for="a-how">How they get in</label>
+    <select id="a-how"><option value="pw">I'll give them a starting password</option><option value="link">Send them a link to choose their own</option></select>
+    <div id="a-pwbox">
+      <label class="f" for="a-pw">Starting password (10+ characters)</label>
+      <div class="row" style="flex-wrap:nowrap"><input id="a-pw" type="text" autocomplete="off"><button type="button" class="btn ghost small" id="suggest" style="flex:none">Suggest</button></div>
+      <p class="hint" style="margin-top:6px">They'll be asked to pick their own the first time they sign in.</p>
+    </div>
+    <button class="btn brand block" style="margin-top:16px" type="submit" id="a-btn">Add to team</button>
+    <div id="a-out"></div>
+  </form>
+
+  <div class="card">
+    <h2>Team</h2>
+    <div id="people"><div class="hint">Loading…</div></div>
+  </div>
+</main>
+
+<script type="module">
+import { api, requireStaff, isFull, header, signOutNow, toast, esc } from "/admin/core.js";
+document.getElementById("hdr").innerHTML = header("Team", { back: true });
+document.getElementById("signOutBtn").onclick = signOutNow;
+const $ = (s) => document.querySelector(s);
+const me = await requireStaff();
+if (!isFull(me)) location.replace("/admin/");
+
+let team = { users: [], emailReady: false };
+const call = (body) => api("/api/admin/login", { method: "POST", body });
+
+function render() {
+  const rows = [...team.users].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+  $("#people").innerHTML = rows.length ? rows.map(u => {
+    const self = u.id === me.id;
+    return `<div class="person ${u.active ? "" : "off"}" style="flex-wrap:wrap">
+      <div class="m"><b>${esc(u.name)}<span class="role ${u.role === "crew" ? "staff" : ""}">${esc(u.roleName)}</span></b>
+        <small>${esc(u.email)}${u.active ? "" : " · turned off"}${u.mustChange ? " · hasn't picked a password yet" : ""}${!u.hasPassword ? " · waiting to use their link" : ""}${u.lastLogin ? " · last in " + new Date(u.lastLogin).toLocaleDateString("en-US") : ""}</small></div>
+      ${self ? `<span class="hint">You</span>` : `
+      <details class="more" style="width:100%"><summary>Options</summary><div class="actions">
+        <button class="btn ${u.active ? "danger" : "ghost"} small" data-act="toggle" data-id="${esc(u.id)}" data-on="${u.active ? 0 : 1}">${u.active ? "Turn off" : "Turn on"}</button>
+        <select class="small" data-act="role" data-id="${esc(u.id)}" style="width:auto;min-height:38px">${Object.entries(team.roles || {}).map(([k, v]) => `<option value="${k}" ${k === u.role ? "selected" : ""}>${esc(v)}</option>`).join("")}</select>
+        <button class="btn ghost small" data-act="link" data-id="${esc(u.id)}">Password link</button>
+        <button class="btn ghost small" data-act="setpw" data-id="${esc(u.id)}">Set password</button>
+        <button class="btn danger small" data-act="remove" data-id="${esc(u.id)}">Remove</button>
+      </div></details>`}
+    </div>`;
+  }).join("") : `<div class="hint">No logins yet. Add yourself first.</div>`;
+}
+async function load() {
+  try { team = await call({ action: "team" }); render(); } catch (e) { $("#people").innerHTML = `<div class="err">${esc(e.error)}</div>`; }
+}
+function showLink(inv, whereSel) {
+  const el = $(whereSel);
+  el.innerHTML = `<div class="ok">${inv.emailed ? "Emailed them a link." : "Email isn't connected, so send them this link yourself (text it)."} It works once and expires in ${inv.hours} hours.</div>
+    <div class="linkbox">${esc(inv.link)}</div><button type="button" class="btn ghost small" style="margin-top:8px" id="copyLink">Copy link</button>`;
+  $("#copyLink").onclick = async () => { try { await navigator.clipboard.writeText(inv.link); toast("Copied."); } catch (_) { toast("Select the link and copy it."); } };
+}
+
+$("#a-how").onchange = () => $("#a-pwbox").classList.toggle("hidden", $("#a-how").value !== "pw");
+$("#suggest").onclick = () => {
+  const words = ["truck","haul","spruce","moose","birch","aurora","tundra","river","cabin","trail","glacier","husky"];
+  const pick = () => words[crypto.getRandomValues(new Uint32Array(1))[0] % words.length];
+  $("#a-pw").value = `${pick()}-${pick()}-${100 + crypto.getRandomValues(new Uint32Array(1))[0] % 900}`;
+};
+$("#add").onsubmit = async (e) => {
+  e.preventDefault(); $("#a-out").innerHTML = ""; $("#a-btn").disabled = true;
+  const pw = $("#a-how").value === "pw" ? $("#a-pw").value : "";
+  if ($("#a-how").value === "pw" && !pw) { toast("Type a starting password or tap Suggest."); $("#a-btn").disabled = false; return; }
+  try {
+    const r = await call({ action: "add", name: $("#a-name").value, email: $("#a-email").value, role: $("#a-role").value, password: pw });
+    team = r; render();
+    if (r.invite) showLink(r.invite, "#a-out");
+    else $("#a-out").innerHTML = `<div class="ok">Added. Give them: <b>jcjunk.space/admin</b>, email <b>${esc($("#a-email").value.trim().toLowerCase())}</b>, password <b>${esc(pw)}</b>.</div>`;
+    $("#a-name").value = $("#a-email").value = $("#a-pw").value = "";
+  } catch (err) { $("#a-out").innerHTML = `<div class="err">${esc(err.error)}</div>`; }
+  finally { $("#a-btn").disabled = false; }
+};
+
+let armed = null;
+$("#people").addEventListener("click", async (e) => {
+  const b = e.target.closest("button[data-act]"); if (!b) return;
+  const id = b.dataset.id, act = b.dataset.act;
+  try {
+    if (act === "toggle") { team = await call({ action: "update", id, active: b.dataset.on === "1" }); render(); toast(b.dataset.on === "1" ? "Turned on." : "Turned off — they're signed out now."); }
+    if (act === "link") { const r = await call({ action: "resetLink", id }); team = r; render(); showLink(r.invite, "#a-out"); window.scrollTo(0, 0); }
+    if (act === "setpw") {
+      const box = b.closest(".actions");
+      if (!box.querySelector(".pwrow")) box.insertAdjacentHTML("beforeend", `<div class="pwrow row" style="width:100%;flex-wrap:nowrap"><input type="text" placeholder="New password (10+)" autocomplete="off"><button class="btn brand small" data-act="savepw" data-id="${esc(id)}" style="flex:none">Save</button></div>`);
+    }
+    if (act === "savepw") {
+      const pw = b.parentElement.querySelector("input").value;
+      team = await call({ action: "setPassword", id, password: pw }); render(); toast("Password set. They'll pick their own at next sign-in.");
+    }
+    if (act === "remove") {
+      if (armed !== id) { armed = id; b.textContent = "Tap again to remove"; setTimeout(() => { if (armed === id) { armed = null; render(); } }, 3000); return; }
+      armed = null; team = await call({ action: "remove", id }); render(); toast("Removed.");
+    }
+  } catch (err) { toast(err.error, 3500); }
+});
+$("#people").addEventListener("change", async (e) => {
+  const s = e.target.closest("select[data-act=role]"); if (!s) return;
+  try { team = await call({ action: "update", id: s.dataset.id, role: s.value }); render(); toast("Access changed."); }
+  catch (err) { toast(err.error, 3500); render(); }
+});
+load();
+</script>
+</body>
+</html>

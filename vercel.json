@@ -1,10 +1,76 @@
 {
   "routes": [
-    { "src": "/", "has": [{ "type": "host", "value": "totes.jcjunk.space" }], "dest": "/totes.html" },
-    { "src": "/(pricing|calculator|policies|tips|book)/?", "has": [{ "type": "host", "value": "totes.jcjunk.space" }], "dest": "/totes/$1.html" },
-    { "src": "/", "has": [{ "type": "host", "value": "flooring.jcjunk.space" }], "dest": "/flooring.html" },
-    { "src": "/totes", "dest": "/totes.html" },
-    { "src": "/flooring", "dest": "/flooring.html" },
-    { "src": "/tips/([a-z0-9-]+)/?", "dest": "/tips/$1.html" }
+    {
+      "src": "/admin",
+      "status": 308,
+      "headers": {
+        "Location": "/admin/"
+      }
+    },
+    {
+      "src": "/admin/",
+      "dest": "/admin/index.html",
+      "headers": {
+        "X-Robots-Tag": "noindex, nofollow",
+        "Cache-Control": "no-cache"
+      }
+    },
+    {
+      "src": "/admin/(estimate|team)/?",
+      "dest": "/admin/$1.html",
+      "headers": {
+        "X-Robots-Tag": "noindex, nofollow",
+        "Cache-Control": "no-cache"
+      }
+    },
+    {
+      "src": "/admin/(.*\\.(?:js|css))",
+      "dest": "/admin/$1",
+      "headers": {
+        "Cache-Control": "no-cache"
+      }
+    },
+    {
+      "src": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "totes.jcjunk.space"
+        }
+      ],
+      "dest": "/totes.html"
+    },
+    {
+      "src": "/(pricing|calculator|policies|tips|book)/?",
+      "has": [
+        {
+          "type": "host",
+          "value": "totes.jcjunk.space"
+        }
+      ],
+      "dest": "/totes/$1.html"
+    },
+    {
+      "src": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "flooring.jcjunk.space"
+        }
+      ],
+      "dest": "/flooring.html"
+    },
+    {
+      "src": "/totes",
+      "dest": "/totes.html"
+    },
+    {
+      "src": "/flooring",
+      "dest": "/flooring.html"
+    },
+    {
+      "src": "/tips/([a-z0-9-]+)/?",
+      "dest": "/tips/$1.html"
+    }
   ]
 }
